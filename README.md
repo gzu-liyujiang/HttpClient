@@ -17,7 +17,7 @@ dependencies {
     //runtimeOnly 'com.amitshekhar.android:android-networking:1.0.2'
 }
 
-//HttpRequest.setService(new OkGoImpl(this));
+//HttpRequest.setAdapter(new OkGoImpl(this));
 HttpRequest.useOkGo(this);
 
 HttpRequest.doGet("http://wthrcdn.etouch.cn/weather_mini?city=%E8%B4%B5%E9%98%B3", null, new HttpService.Callback() {
