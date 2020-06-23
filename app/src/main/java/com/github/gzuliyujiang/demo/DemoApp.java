@@ -25,7 +25,6 @@ public class DemoApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        //HttpRequest.setService(new OkGoImpl(this));
         HttpRequest.useOkGo(this);
     }
 
