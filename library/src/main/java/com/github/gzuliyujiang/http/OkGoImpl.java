@@ -70,48 +70,6 @@ public class OkGoImpl implements HttpAdapter {
     }
 
     private void query(Request<String, ?> request, Params params, final Callback callback) {
-        if (params != null) {
-            request.tag(params.tag);
-            for (Map.Entry<String, String> entry : params.toHeaderMap().entrySet()) {
-                request.headers(entry.getKey(), entry.getValue());
-            }
-            boolean resetBodyParams = false;
-            if (request instanceof BodyRequest) {
-                //noinspection rawtypes
-                BodyRequest bodyRequest = (BodyRequest) request;
-                if (params instanceof FormParams) {
-                    // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                    resetBodyParams = true;
-                    FormParams formParams = (FormParams) params;
-                    bodyRequest.upString(formParams.toBodyString(), MediaType.parse("application/x-www-form-urlencoded"));
-                } else if (params instanceof JSONParams) {
-                    // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                    resetBodyParams = true;
-                    JSONParams jsonParams = (JSONParams) params;
-                    bodyRequest.upJson(jsonParams.toBodyJson());
-                } else if (params instanceof StreamParams) {
-                    // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                    resetBodyParams = true;
-                    StreamParams streamParams = (StreamParams) params;
-                    bodyRequest.upBytes(streamParams.toBodyBytes());
-                } else if (params instanceof FileParams) {
-                    // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                    resetBodyParams = true;
-                    FileParams fileParams = (FileParams) params;
-                    bodyRequest.upFile(fileParams.toFile());
-                } else if (params instanceof MultipartParams) {
-                    MultipartParams multipartParams = (MultipartParams) params;
-                    for (Map.Entry<String, File> entry : multipartParams.toFileMap().entrySet()) {
-                        bodyRequest.params(entry.getKey(), entry.getKey());
-                    }
-                }
-            }
-            if (!resetBodyParams) {
-                for (Map.Entry<String, String> entry : params.toBodyMap().entrySet()) {
-                    request.params(entry.getKey(), entry.getValue());
-                }
-            }
-        }
         StringCallback stringCallback;
         if (callback == null) {
             stringCallback = new StringCallback() {
@@ -143,7 +101,46 @@ public class OkGoImpl implements HttpAdapter {
                 }
             };
         }
-        request.execute(stringCallback);
+        if (params == null) {
+            request.execute(stringCallback);
+            return;
+        }
+        request.tag(params.tag);
+        for (Map.Entry<String, String> entry : params.toHeaderMap().entrySet()) {
+            request.headers(entry.getKey(), entry.getValue());
+        }
+        for (Map.Entry<String, String> entry : params.toBodyMap().entrySet()) {
+            request.params(entry.getKey(), entry.getValue());
+        }
+        if (request instanceof BodyRequest) {
+            //noinspection unchecked
+            BodyRequest<String, ?> bodyRequest = (BodyRequest<String, ?>) request;
+            if (params instanceof FormParams) {
+                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                FormParams formParams = (FormParams) params;
+                bodyRequest.upString(formParams.toBodyString(), MediaType.parse("application/x-www-form-urlencoded"));
+            } else if (params instanceof JSONParams) {
+                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                JSONParams jsonParams = (JSONParams) params;
+                bodyRequest.upJson(jsonParams.toBodyJson());
+            } else if (params instanceof StreamParams) {
+                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                StreamParams streamParams = (StreamParams) params;
+                bodyRequest.upBytes(streamParams.toBodyBytes());
+            } else if (params instanceof FileParams) {
+                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                FileParams fileParams = (FileParams) params;
+                bodyRequest.upFile(fileParams.toFile());
+            } else if (params instanceof MultipartParams) {
+                MultipartParams multipartParams = (MultipartParams) params;
+                for (Map.Entry<String, File> entry : multipartParams.toFileMap().entrySet()) {
+                    bodyRequest.params(entry.getKey(), entry.getKey());
+                }
+            }
+            bodyRequest.execute(stringCallback);
+        } else {
+            request.execute(stringCallback);
+        }
     }
 
     @Override
