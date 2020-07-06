@@ -71,38 +71,44 @@ public class OkGoImpl implements HttpAdapter {
 
     private void query(Request<String, ?> request, Params params, final Callback callback) {
         if (params != null) {
-            Logger.print("http request tag: " + params.tag);
             request.tag(params.tag);
             for (Map.Entry<String, String> entry : params.toHeaderMap().entrySet()) {
                 request.headers(entry.getKey(), entry.getValue());
             }
-            for (Map.Entry<String, String> entry : params.toBodyMap().entrySet()) {
-                request.params(entry.getKey(), entry.getValue());
+            boolean resetBodyParams = false;
+            if (request instanceof BodyRequest) {
+                //noinspection rawtypes
+                BodyRequest bodyRequest = (BodyRequest) request;
+                if (params instanceof FormParams) {
+                    // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                    resetBodyParams = true;
+                    FormParams formParams = (FormParams) params;
+                    bodyRequest.upString(formParams.toBodyString(), MediaType.parse("application/x-www-form-urlencoded"));
+                } else if (params instanceof JSONParams) {
+                    // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                    resetBodyParams = true;
+                    JSONParams jsonParams = (JSONParams) params;
+                    bodyRequest.upJson(jsonParams.toBodyJson());
+                } else if (params instanceof StreamParams) {
+                    // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                    resetBodyParams = true;
+                    StreamParams streamParams = (StreamParams) params;
+                    bodyRequest.upBytes(streamParams.toBodyBytes());
+                } else if (params instanceof FileParams) {
+                    // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                    resetBodyParams = true;
+                    FileParams fileParams = (FileParams) params;
+                    bodyRequest.upFile(fileParams.toFile());
+                } else if (params instanceof MultipartParams) {
+                    MultipartParams multipartParams = (MultipartParams) params;
+                    for (Map.Entry<String, File> entry : multipartParams.toFileMap().entrySet()) {
+                        bodyRequest.params(entry.getKey(), entry.getKey());
+                    }
+                }
             }
-        }
-        if (request instanceof BodyRequest) {
-            //noinspection rawtypes
-            BodyRequest bodyRequest = (BodyRequest) request;
-            if (params instanceof FormParams) {
-                FormParams formParams = (FormParams) params;
-                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                bodyRequest.upString(formParams.toBodyString(), MediaType.parse("application/x-www-form-urlencoded"));
-            } else if (params instanceof JSONParams) {
-                JSONParams jsonParams = (JSONParams) params;
-                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                bodyRequest.upJson(jsonParams.toBodyJson());
-            } else if (params instanceof StreamParams) {
-                StreamParams streamParams = (StreamParams) params;
-                // 注意：使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                bodyRequest.upBytes(streamParams.toBodyBytes());
-            } else if (params instanceof FileParams) {
-                FileParams fileParams = (FileParams) params;
-                // 注意：使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                bodyRequest.upFile(fileParams.toFile());
-            } else if (params instanceof MultipartParams) {
-                MultipartParams multipartParams = (MultipartParams) params;
-                for (Map.Entry<String, File> entry : multipartParams.toFileMap().entrySet()) {
-                    bodyRequest.params(entry.getKey(), entry.getKey());
+            if (!resetBodyParams) {
+                for (Map.Entry<String, String> entry : params.toBodyMap().entrySet()) {
+                    request.params(entry.getKey(), entry.getValue());
                 }
             }
         }
@@ -142,7 +148,6 @@ public class OkGoImpl implements HttpAdapter {
 
     @Override
     public void cancel(Object tag) {
-        Logger.print("cancel request by tag: " + tag);
         OkGo.getInstance().cancelTag(tag);
     }
 

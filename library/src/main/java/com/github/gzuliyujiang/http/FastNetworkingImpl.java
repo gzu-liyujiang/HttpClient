@@ -63,7 +63,7 @@ public class FastNetworkingImpl implements HttpAdapter {
             MultipartParams multipartParams = (MultipartParams) params;
             //noinspection rawtypes
             ANRequest.MultiPartBuilder builder = AndroidNetworking.upload(url);
-            addHeaderAndQuery(builder, params);
+            addHeaders(builder, params);
             builder.addMultipartFile(multipartParams.toFileMap());
             builder.build().getAsString(new StringRequestListener() {
                 @Override
@@ -83,28 +83,38 @@ public class FastNetworkingImpl implements HttpAdapter {
             return;
         }
         ANRequest.DynamicRequestBuilder builder = AndroidNetworking.request(url, method);
-        addHeaderAndQuery(builder, params);
         if (params != null) {
+            addHeaders(builder, params);
+            boolean resetBodyParams = false;
             if (params instanceof FormParams) {
-                FormParams formParams = (FormParams) params;
                 // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                resetBodyParams = true;
+                FormParams formParams = (FormParams) params;
                 builder.setContentType("application/x-www-form-urlencoded");
                 builder.addStringBody(formParams.toBodyString());
             } else if (params instanceof JSONParams) {
-                JSONParams jsonParams = (JSONParams) params;
                 // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                resetBodyParams = true;
+                JSONParams jsonParams = (JSONParams) params;
                 builder.setContentType("application/json");
                 builder.addStringBody(jsonParams.toBodyJson());
             } else if (params instanceof StreamParams) {
+                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                resetBodyParams = true;
                 StreamParams streamParams = (StreamParams) params;
-                // 注意：使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
                 builder.setContentType("application/octet-stream");
                 builder.addByteBody(streamParams.toBodyBytes());
             } else if (params instanceof FileParams) {
+                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                resetBodyParams = true;
                 FileParams fileParams = (FileParams) params;
-                // 注意：使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
                 builder.setContentType("application/octet-stream");
                 builder.addFileBody(fileParams.toFile());
+            }
+            if (!resetBodyParams) {
+                for (Map.Entry<String, String> entry : params.toBodyMap().entrySet()) {
+                    builder.addQueryParameter(entry.getKey(), entry.getValue());
+                }
             }
         }
         builder.build().getAsString(new StringRequestListener() {
@@ -124,11 +134,7 @@ public class FastNetworkingImpl implements HttpAdapter {
         });
     }
 
-    private void addHeaderAndQuery(RequestBuilder builder, Params params) {
-        if (params == null) {
-            return;
-        }
-        Logger.print("http request tag: " + params.tag);
+    private void addHeaders(@NonNull RequestBuilder builder, @NonNull Params params) {
         builder.setTag(params.tag);
         boolean containsCharset = false;
         for (Map.Entry<String, String> entry : params.toHeaderMap().entrySet()) {
@@ -140,14 +146,10 @@ public class FastNetworkingImpl implements HttpAdapter {
         if (!containsCharset) {
             builder.addHeaders("Charset", CHARSET);
         }
-        for (Map.Entry<String, String> entry : params.toBodyMap().entrySet()) {
-            builder.addQueryParameter(entry.getKey(), entry.getValue());
-        }
     }
 
     @Override
     public void cancel(Object tag) {
-        Logger.print("cancel request by tag: " + tag);
         AndroidNetworking.cancel(tag);
     }
 
