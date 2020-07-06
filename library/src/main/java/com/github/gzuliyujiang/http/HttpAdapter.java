@@ -19,10 +19,13 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.collection.ArrayMap;
 
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -47,11 +50,16 @@ public interface HttpAdapter {
     String CHARSET = "UTF-8";
     String USER_AGENT = "Mozilla/5.0 (Linux; Android " + Build.VERSION.RELEASE + "; " +
             Build.MANUFACTURER + " " + Build.MODEL + "; AppleWebKit/537.36 (KHTML, like Gecko) " +
-            "Version/4.0 Chrome/74.0.3729.185 Safari/537.36 LiYuJiang/2020.6.23";
+            "Version/4.0 Chrome/74.0.3729.185 Safari/537.36 " +
+            "HttpRequest/" + BuildConfig.VERSION_NAME + " (framework 5.0; gzu-liyujiang)";
 
     void doGet(String url, @Nullable Params params, @Nullable Callback callback);
 
-    void doPost(String url, @Nullable Params params, Callback callback);
+    void doPost(String url, @Nullable Params params, @Nullable Callback callback);
+
+    void upload(String url, @NonNull File file, @Nullable Callback callback);
+
+    void cancel(Object tag);
 
     void cancelAll();
 
@@ -70,12 +78,22 @@ public interface HttpAdapter {
      * HTTP请求参数
      */
     abstract class Params {
+        protected Object tag;
         protected ConcurrentHashMap<String, String> header;
         protected ConcurrentHashMap<String, String> body;
 
         public Params() {
+            this.tag = UUID.randomUUID();
             header = new ConcurrentHashMap<>();
             body = new ConcurrentHashMap<>();
+        }
+
+        /**
+         * 通常我们在{@link android.app.Activity}中做网络请求，
+         * 当销毁时要取消请求否则会发生内存泄露，可通过该标记取消该请求。
+         */
+        public void setTag(Object tag) {
+            this.tag = tag;
         }
 
         public void putHeader(String key, String value) {
@@ -205,6 +223,35 @@ public interface HttpAdapter {
             }
             return new JSONObject(body).toString().getBytes();
         }
+    }
+
+    class FileParams extends Params {
+        private File file;
+
+        public FileParams(File file) {
+            this.file = file;
+        }
+
+        public File toFile() {
+            return file;
+        }
+
+    }
+
+    class MultipartParams extends Params {
+        private Map<String, File> fileMap;
+
+        public MultipartParams(Map<String, File> map) {
+            if (map == null) {
+                map = new ArrayMap<>();
+            }
+            this.fileMap = map;
+        }
+
+        public Map<String, File> toFileMap() {
+            return fileMap;
+        }
+
     }
 
 }
