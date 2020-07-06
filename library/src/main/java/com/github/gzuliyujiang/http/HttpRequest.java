@@ -16,7 +16,10 @@ package com.github.gzuliyujiang.http;
 
 import android.app.Application;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.io.File;
 
 /**
  * Created by liyujiang on 2020/6/23.
@@ -65,6 +68,14 @@ public class HttpRequest {
 
     public static void doPost(String url, @Nullable HttpAdapter.Params params, HttpAdapter.Callback callback) {
         getAdapter().doPost(url, params, callback);
+    }
+
+    public static void upload(String url, @NonNull File file, @Nullable HttpAdapter.Callback callback) {
+        getAdapter().upload(url, file, callback);
+    }
+
+    public static void cancel(Object tag) {
+        getAdapter().cancel(tag);
     }
 
     public static void cancelAll() {
