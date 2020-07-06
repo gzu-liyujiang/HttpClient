@@ -25,6 +25,7 @@ import com.androidnetworking.common.Method;
 import com.androidnetworking.common.RequestBuilder;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.StringRequestListener;
+import com.github.gzuliyujiang.logger.Logger;
 
 import java.io.File;
 import java.util.Map;
@@ -38,7 +39,8 @@ import java.util.Map;
 public class FastNetworkingImpl implements HttpAdapter {
 
     public FastNetworkingImpl(Application application) {
-        AndroidNetworking.initialize(application);
+        Logger.print("use `com.amitshekhar.android:android-networking`");
+        AndroidNetworking.initialize(application, Utils.buildOkHttpClient(null));
     }
 
     @Override
@@ -126,6 +128,7 @@ public class FastNetworkingImpl implements HttpAdapter {
         if (params == null) {
             return;
         }
+        Logger.print("http request tag: " + params.tag);
         builder.setTag(params.tag);
         boolean containsCharset = false;
         for (Map.Entry<String, String> entry : params.toHeaderMap().entrySet()) {
@@ -144,6 +147,7 @@ public class FastNetworkingImpl implements HttpAdapter {
 
     @Override
     public void cancel(Object tag) {
+        Logger.print("cancel request by tag: " + tag);
         AndroidNetworking.cancel(tag);
     }
 

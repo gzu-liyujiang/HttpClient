@@ -18,12 +18,12 @@ import android.app.Application;
 
 import androidx.annotation.NonNull;
 
+import com.github.gzuliyujiang.logger.Logger;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.cache.CacheMode;
 import com.lzy.okgo.callback.StringCallback;
 import com.lzy.okgo.cookie.CookieJarImpl;
 import com.lzy.okgo.cookie.store.SPCookieStore;
-import com.lzy.okgo.https.HttpsUtils;
 import com.lzy.okgo.model.HttpHeaders;
 import com.lzy.okgo.model.Response;
 import com.lzy.okgo.request.base.BodyRequest;
@@ -32,10 +32,8 @@ import com.lzy.okgo.utils.OkLogger;
 
 import java.io.File;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
 
 /**
  * 参见 https://github.com/jeasonlzy/okhttp-OkGo
@@ -45,21 +43,11 @@ import okhttp3.OkHttpClient;
 public class OkGoImpl implements HttpAdapter {
 
     public OkGoImpl(Application application) {
+        Logger.print("use `com.lzy.net:okgo`");
         OkLogger.debug(false);
         // See https://github.com/jeasonlzy/okhttp-OkGo/wiki/Init#%E5%85%A8%E5%B1%80%E9%85%8D%E7%BD%AE
-        HttpsUtils.SSLParams sslParams = HttpsUtils.getSslSocketFactory();
-        OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .connectTimeout(5, TimeUnit.SECONDS)
-                .retryOnConnectionFailure(true)
-                .readTimeout(8, TimeUnit.SECONDS)
-                .writeTimeout(8, TimeUnit.SECONDS)
-                .followRedirects(false)
-                .followSslRedirects(true)
-                .sslSocketFactory(sslParams.sSLSocketFactory, sslParams.trustManager)
-                .cookieJar(new CookieJarImpl(new SPCookieStore(application)))
-                .build();
         OkGo.getInstance().init(application)
-                .setOkHttpClient(okHttpClient)
+                .setOkHttpClient(Utils.buildOkHttpClient(new CookieJarImpl(new SPCookieStore(application))))
                 .setRetryCount(1)
                 .setCacheMode(CacheMode.DEFAULT)
                 .addCommonHeaders(new HttpHeaders("Charset", CHARSET))
@@ -83,6 +71,7 @@ public class OkGoImpl implements HttpAdapter {
 
     private void query(Request<String, ?> request, Params params, final Callback callback) {
         if (params != null) {
+            Logger.print("http request tag: " + params.tag);
             request.tag(params.tag);
             for (Map.Entry<String, String> entry : params.toHeaderMap().entrySet()) {
                 request.headers(entry.getKey(), entry.getValue());
@@ -153,6 +142,7 @@ public class OkGoImpl implements HttpAdapter {
 
     @Override
     public void cancel(Object tag) {
+        Logger.print("cancel request by tag: " + tag);
         OkGo.getInstance().cancelTag(tag);
     }
 
