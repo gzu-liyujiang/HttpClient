@@ -19,6 +19,8 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.github.gzuliyujiang.logger.Logger;
+
 import java.io.File;
 
 /**
@@ -44,6 +46,10 @@ public class HttpRequest {
         return instance;
     }
 
+    public static void enableLog() {
+        Logger.useDefaultPrinter(HttpRequest.class.getSimpleName());
+    }
+
     public static void setAdapter(HttpAdapter adapter) {
         getInstance().adapter = adapter;
     }
@@ -52,6 +58,7 @@ public class HttpRequest {
      * 须添加依赖：runtimeOnly 'com.lzy.net:okgo:3.0.4'
      */
     public static void useOkGo(Application application) {
+        Logger.print("use `com.lzy.net:okgo`");
         setAdapter(new OkGoImpl(application));
     }
 
@@ -59,26 +66,32 @@ public class HttpRequest {
      * 须添加依赖：runtimeOnly 'com.amitshekhar.android:android-networking:1.0.2'
      */
     public static void useFastNetworking(Application application) {
+        Logger.print("use `com.amitshekhar.android:android-networking`");
         setAdapter(new FastNetworkingImpl(application));
     }
 
     public static void doGet(String url, @Nullable HttpAdapter.Params params, @Nullable HttpAdapter.Callback callback) {
+        Logger.print("GET " + url + "\nPARAMS " + (params == null ? "EMPTY" : params.toString()));
         getAdapter().doGet(url, params, callback);
     }
 
     public static void doPost(String url, @Nullable HttpAdapter.Params params, HttpAdapter.Callback callback) {
+        Logger.print("POST " + url + "\nPARAMS " + (params == null ? "EMPTY" : params.toString()));
         getAdapter().doPost(url, params, callback);
     }
 
     public static void upload(String url, @NonNull File file, @Nullable HttpAdapter.Callback callback) {
+        Logger.print("POST " + url + "\nFILE " + file);
         getAdapter().upload(url, file, callback);
     }
 
     public static void cancel(Object tag) {
+        Logger.print("cancel request by tag: " + tag);
         getAdapter().cancel(tag);
     }
 
     public static void cancelAll() {
+        Logger.print("cancel all request");
         getAdapter().cancelAll();
     }
 
