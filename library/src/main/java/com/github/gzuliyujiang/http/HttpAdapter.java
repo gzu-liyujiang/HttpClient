@@ -19,11 +19,13 @@ import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.collection.ArrayMap;
 
 import org.json.JSONObject;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,14 +52,13 @@ public interface HttpAdapter {
     String CHARSET = "UTF-8";
     String USER_AGENT = "Mozilla/5.0 (Linux; Android " + Build.VERSION.RELEASE + "; " +
             Build.MANUFACTURER + " " + Build.MODEL + "; AppleWebKit/537.36 (KHTML, like Gecko) " +
-            "Version/4.0 Chrome/74.0.3729.185 Safari/537.36 " +
-            "HttpRequest/" + BuildConfig.VERSION_NAME + " (framework 5.0; gzu-liyujiang)";
+            "HttpRequest/" + BuildConfig.VERSION_NAME;
 
     void doGet(String url, @Nullable Params params, @Nullable Callback callback);
 
     void doPost(String url, @Nullable Params params, @Nullable Callback callback);
 
-    void upload(String url, @NonNull File file, @Nullable Callback callback);
+    void upload(String url, @NonNull MultipartParams params, @Nullable Callback callback);
 
     void cancel(Object tag);
 
@@ -78,9 +79,9 @@ public interface HttpAdapter {
      * HTTP请求参数
      */
     abstract class Params {
-        protected Object tag;
-        protected ConcurrentHashMap<String, String> header;
-        protected ConcurrentHashMap<String, String> body;
+        private Object tag;
+        private ConcurrentHashMap<String, String> header;
+        private ConcurrentHashMap<String, String> body;
 
         public Params() {
             this.tag = UUID.randomUUID();
@@ -94,6 +95,10 @@ public interface HttpAdapter {
          */
         public void setTag(Object tag) {
             this.tag = tag;
+        }
+
+        public final Object getTag() {
+            return tag;
         }
 
         public void putHeader(String key, String value) {
@@ -152,7 +157,7 @@ public interface HttpAdapter {
 
         public String toBodyString() {
             StringBuilder result = new StringBuilder();
-            for (ConcurrentHashMap.Entry<String, String> entry : body.entrySet()) {
+            for (ConcurrentHashMap.Entry<String, String> entry : toBodyMap().entrySet()) {
                 if (result.length() > 0) {
                     result.append("&");
                 }
@@ -199,7 +204,7 @@ public interface HttpAdapter {
             if (json != null) {
                 return json;
             }
-            return new JSONObject(body).toString();
+            return new JSONObject(toBodyMap()).toString();
         }
 
         @NonNull
@@ -210,46 +215,19 @@ public interface HttpAdapter {
 
     }
 
-    class StreamParams extends Params {
-        private byte[] bytes;
+    class MultipartParams extends QueryParams {
+        private List<File> files = new ArrayList<>();
 
-        public StreamParams(byte[] bytes) {
-            this.bytes = bytes;
+        public MultipartParams(File file) {
+            this(Collections.singletonList(file));
         }
 
-        public byte[] toBodyBytes() {
-            if (bytes != null) {
-                return bytes;
-            }
-            return new JSONObject(body).toString().getBytes();
-        }
-    }
-
-    class FileParams extends Params {
-        private File file;
-
-        public FileParams(File file) {
-            this.file = file;
+        public MultipartParams(List<File> files) {
+            this.files.addAll(files);
         }
 
-        public File toFile() {
-            return file;
-        }
-
-    }
-
-    class MultipartParams extends Params {
-        private Map<String, File> fileMap;
-
-        public MultipartParams(Map<String, File> map) {
-            if (map == null) {
-                map = new ArrayMap<>();
-            }
-            this.fileMap = map;
-        }
-
-        public Map<String, File> toFileMap() {
-            return fileMap;
+        public List<File> toFiles() {
+            return files;
         }
 
     }

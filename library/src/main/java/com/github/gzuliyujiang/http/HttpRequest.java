@@ -22,6 +22,7 @@ import androidx.annotation.Nullable;
 import com.github.gzuliyujiang.logger.Logger;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * Created by liyujiang on 2020/6/23.
@@ -79,8 +80,8 @@ public class HttpRequest {
         getAdapter().doPost(url, params, callback);
     }
 
-    public static void upload(String url, @NonNull File file, @Nullable HttpAdapter.Callback callback) {
-        getAdapter().upload(url, file, callback);
+    public static void upload(String url, @NonNull List<File> files, @Nullable HttpAdapter.Callback callback) {
+        doPost(url, new HttpAdapter.MultipartParams(files), callback);
     }
 
     public static void cancel(Object tag) {

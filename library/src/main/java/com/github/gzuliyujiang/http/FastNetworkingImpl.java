@@ -27,7 +27,6 @@ import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.StringRequestListener;
 import com.github.gzuliyujiang.logger.Logger;
 
-import java.io.File;
 import java.util.Map;
 
 /**
@@ -54,8 +53,8 @@ public class FastNetworkingImpl implements HttpAdapter {
     }
 
     @Override
-    public void upload(String url, @NonNull File file, @Nullable Callback callback) {
-        query(Method.POST, url, new FileParams(file), callback);
+    public void upload(String url, @NonNull MultipartParams params, @Nullable Callback callback) {
+        query(Method.POST, url, params, callback);
     }
 
     private void query(int method, String url, Params params, final Callback callback) {
@@ -64,22 +63,8 @@ public class FastNetworkingImpl implements HttpAdapter {
             //noinspection rawtypes
             ANRequest.MultiPartBuilder builder = AndroidNetworking.upload(url);
             addHeaderAndQuery(builder, params);
-            builder.addMultipartFile(multipartParams.toFileMap());
-            builder.build().getAsString(new StringRequestListener() {
-                @Override
-                public void onResponse(String response) {
-                    if (callback != null) {
-                        callback.onSuccess(response);
-                    }
-                }
-
-                @Override
-                public void onError(ANError anError) {
-                    if (callback != null) {
-                        callback.onError(anError.getErrorCode(), anError);
-                    }
-                }
-            });
+            builder.addMultipartFileList("file", multipartParams.toFiles());
+            getAsString(builder.build(), callback);
             return;
         }
         ANRequest.DynamicRequestBuilder builder = AndroidNetworking.request(url, method);
@@ -95,19 +80,13 @@ public class FastNetworkingImpl implements HttpAdapter {
                 JSONParams jsonParams = (JSONParams) params;
                 builder.setContentType("application/json");
                 builder.addStringBody(jsonParams.toBodyJson());
-            } else if (params instanceof StreamParams) {
-                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                StreamParams streamParams = (StreamParams) params;
-                builder.setContentType("application/octet-stream");
-                builder.addByteBody(streamParams.toBodyBytes());
-            } else if (params instanceof FileParams) {
-                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                FileParams fileParams = (FileParams) params;
-                builder.setContentType("application/octet-stream");
-                builder.addFileBody(fileParams.toFile());
             }
         }
-        builder.build().getAsString(new StringRequestListener() {
+        getAsString(builder.build(), callback);
+    }
+
+    private void getAsString(ANRequest<?> request, Callback callback) {
+        request.getAsString(new StringRequestListener() {
             @Override
             public void onResponse(String response) {
                 if (callback != null) {
@@ -125,16 +104,10 @@ public class FastNetworkingImpl implements HttpAdapter {
     }
 
     private void addHeaderAndQuery(@NonNull RequestBuilder builder, @NonNull Params params) {
-        builder.setTag(params.tag);
-        boolean containsCharset = false;
+        builder.setTag(params.getTag());
+        builder.setUserAgent(USER_AGENT);
         for (Map.Entry<String, String> entry : params.toHeaderMap().entrySet()) {
-            if (entry.getKey().equalsIgnoreCase("charset")) {
-                containsCharset = true;
-            }
             builder.addHeaders(entry.getKey(), entry.getValue());
-        }
-        if (!containsCharset) {
-            builder.addHeaders("Charset", CHARSET);
         }
         for (Map.Entry<String, String> entry : params.toBodyMap().entrySet()) {
             builder.addQueryParameter(entry.getKey(), entry.getValue());

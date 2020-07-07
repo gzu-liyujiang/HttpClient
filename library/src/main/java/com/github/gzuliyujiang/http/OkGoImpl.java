@@ -31,9 +31,8 @@ import com.lzy.okgo.request.base.Request;
 import com.lzy.okgo.utils.OkLogger;
 
 import java.io.File;
+import java.util.List;
 import java.util.Map;
-
-import okhttp3.MediaType;
 
 /**
  * 参见 https://github.com/jeasonlzy/okhttp-OkGo
@@ -43,14 +42,12 @@ import okhttp3.MediaType;
 public class OkGoImpl implements HttpAdapter {
 
     public OkGoImpl(Application application) {
-        Logger.print("use `com.lzy.net:okgo`");
         OkLogger.debug(false);
         // See https://github.com/jeasonlzy/okhttp-OkGo/wiki/Init#%E5%85%A8%E5%B1%80%E9%85%8D%E7%BD%AE
         OkGo.getInstance().init(application)
                 .setOkHttpClient(Utils.buildOkHttpClient(new CookieJarImpl(new SPCookieStore(application))))
                 .setRetryCount(1)
                 .setCacheMode(CacheMode.DEFAULT)
-                .addCommonHeaders(new HttpHeaders("Charset", CHARSET))
                 .addCommonHeaders(new HttpHeaders("User-Agent", USER_AGENT));
     }
 
@@ -65,82 +62,70 @@ public class OkGoImpl implements HttpAdapter {
     }
 
     @Override
-    public void upload(String url, @NonNull File file, Callback callback) {
-        doPost(url, new FileParams(file), callback);
+    public void upload(String url, @NonNull MultipartParams params, Callback callback) {
+        query(OkGo.post(url), params, callback);
     }
 
     private void query(Request<String, ?> request, Params params, final Callback callback) {
-        StringCallback stringCallback;
-        if (callback == null) {
-            stringCallback = new StringCallback() {
-                @Override
-                public void onSuccess(Response<String> response) {
-                    // do nothing
-                }
-            };
-        } else {
-            stringCallback = new StringCallback() {
-                @Override
-                public void onSuccess(Response<String> response) {
-                    try {
-                        callback.onSuccess(response.body());
-                    } catch (Exception e) {
-                        callback.onError(-1, e);
-                    }
-                }
-
-                @Override
-                public void onError(Response<String> response) {
-                    Throwable throwable = response.getException();
-                    int code = response.code();
-                    try {
-                        callback.onError(code, throwable);
-                    } catch (Exception e) {
-                        callback.onError(-1, e);
-                    }
-                }
-            };
-        }
-        if (params == null) {
-            request.execute(stringCallback);
-            return;
-        }
-        request.tag(params.tag);
-        for (Map.Entry<String, String> entry : params.toHeaderMap().entrySet()) {
-            request.headers(entry.getKey(), entry.getValue());
-        }
-        for (Map.Entry<String, String> entry : params.toBodyMap().entrySet()) {
-            request.params(entry.getKey(), entry.getValue());
+        if (params != null) {
+            request.tag(params.getTag());
+            for (Map.Entry<String, String> entry : params.toHeaderMap().entrySet()) {
+                request.headers(entry.getKey(), entry.getValue());
+            }
+            for (Map.Entry<String, String> entry : params.toBodyMap().entrySet()) {
+                request.params(entry.getKey(), entry.getValue());
+            }
         }
         if (request instanceof BodyRequest) {
-            //noinspection unchecked
-            BodyRequest<String, ?> bodyRequest = (BodyRequest<String, ?>) request;
-            if (params instanceof FormParams) {
-                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                FormParams formParams = (FormParams) params;
-                bodyRequest.upString(formParams.toBodyString(), MediaType.parse("application/x-www-form-urlencoded"));
-            } else if (params instanceof JSONParams) {
-                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                JSONParams jsonParams = (JSONParams) params;
-                bodyRequest.upJson(jsonParams.toBodyJson());
-            } else if (params instanceof StreamParams) {
-                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                StreamParams streamParams = (StreamParams) params;
-                bodyRequest.upBytes(streamParams.toBodyBytes());
-            } else if (params instanceof FileParams) {
-                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                FileParams fileParams = (FileParams) params;
-                bodyRequest.upFile(fileParams.toFile());
-            } else if (params instanceof MultipartParams) {
+            BodyRequest<?, ?> bodyRequest = (BodyRequest<?, ?>) request;
+            if (params instanceof MultipartParams) {
                 MultipartParams multipartParams = (MultipartParams) params;
-                for (Map.Entry<String, File> entry : multipartParams.toFileMap().entrySet()) {
-                    bodyRequest.params(entry.getKey(), entry.getKey());
+                List<File> files = multipartParams.toFiles();
+                if (files != null && files.size() > 0) {
+                    if (files.size() == 1) {
+                        bodyRequest.params("file", files.get(0));
+                    } else {
+                        bodyRequest.addFileParams("file", files);
+                    }
+                }
+            } else if (params instanceof JSONParams) {
+                JSONParams jsonParams = (JSONParams) params;
+                // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
+                bodyRequest.upJson(jsonParams.toBodyJson());
+            }
+        }
+        if (callback == null) {
+            request.execute(new StringCallback() {
+                @Override
+                public void onSuccess(Response<String> response) {
+
+                }
+            });
+            return;
+        }
+        request.execute(new StringCallback() {
+            @Override
+            public void onSuccess(Response<String> response) {
+                try {
+                    callback.onSuccess(response.body());
+                } catch (Exception e) {
+                    Logger.print(e);
+                    callback.onError(-1, e);
                 }
             }
-            bodyRequest.execute(stringCallback);
-        } else {
-            request.execute(stringCallback);
-        }
+
+            @Override
+            public void onError(Response<String> response) {
+                Throwable throwable = response.getException();
+                int code = response.code();
+                try {
+                    callback.onError(code, throwable);
+                } catch (Exception e) {
+                    Logger.print(e);
+                    callback.onError(-1, e);
+                }
+            }
+        });
     }
 
     @Override
