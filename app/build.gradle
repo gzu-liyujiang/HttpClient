@@ -25,7 +25,6 @@ android {
 
     defaultConfig {
         multiDexEnabled false
-        applicationId appPackageName
         //按不同维度打包，必须添加，不添加编译不通过，后面的数值任何字符串都可以
         flavorDimensions "channel"
         signingConfigs {

@@ -8,7 +8,7 @@ buildscript {
     dependencies {
         classpath 'com.android.tools.build:gradle:4.0.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.5'
-        classpath "com.tencent.mm:AndResGuard-gradle-plugin:${appResGuardVersion}"
+        classpath "com.tencent.mm:AndResGuard-gradle-plugin:${andResGuardVersion}"
     }
 }
 
