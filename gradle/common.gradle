@@ -26,14 +26,22 @@ android {
     defaultConfig {
         minSdkVersion androidMinSdkVersion as int
         targetSdkVersion androidTargetSdkVersion as int
-        versionCode Integer.parseInt(new Date().format("yyyyMMdd"))
-        versionName libVersionName + "." + new Date().format("yyyyMMddHHmm")
+        versionCode rootProject.gitGitCommitNumber()
+        versionName rootProject.getGitLatestTag()
+        println("versionCode: $versionCode\nversionName: $versionName")
+        buildConfigField "String", "GIT_BRANCH", '"' + rootProject.getGitBranch() + '"'
+        buildConfigField "String", "GIT_LATEST_COMMIT_HASH", '"' + rootProject.getGitLatestCommitHash() + '"'
+        buildConfigField "String", "GIT_LATEST_COMMIT_HASH_SHORT", '"' + rootProject.getGitLatestCommitHashShort() + '"'
     }
 
     sourceSets {
         main {
-            //用于打包第三方SO库
-            jniLibs.srcDirs = ['libs']
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+            res.srcDirs = ['src/main/res']
+            java.srcDirs = ['src/main/java']
+            assets.srcDirs = ['src/main/assets']
+            jniLibs.srcDirs = ['libs', 'src/main/jniLibs']
+            jni.srcDirs = ['cpp', 'jni', 'src/main/cpp', 'src/main/jni']
         }
     }
 
@@ -72,9 +80,10 @@ android {
         exclude 'androidsupportmultidexversion.txt'
         exclude 'LICENSE*'
         exclude 'junit/*/*'
+        exclude 'publicsuffixes.gz'
+        exclude 'okhttp3/internal/publicsuffix/publicsuffixes.gz'
         //exclude 'assets/libwbsafeedit_x86'
         //exclude 'assets/libwbsafeedit_x86_64'
-        //exclude 'okhttp3/internal/publicsuffix/publicsuffixes.gz'
     }
 
 }
