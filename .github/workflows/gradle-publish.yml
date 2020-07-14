@@ -23,7 +23,9 @@ jobs:
       run: ./gradlew build
 
     # the publishing section of your build.gradle
-    - name: Publish to maven local
-      run: ./gradlew publishToMavenLocal --info --warning-mode all
- 
-        
+    #- name: Publish to maven local
+    #  run: ./gradlew publishToMavenLocal --warning-mode all
+    - name: Publish to GitHub Packages
+      env:
+        TOKEN: ${{ secrets.TOKEN }}
+      run: ./gradlew publishReleasePublicationToGitHub --warning-mode all
