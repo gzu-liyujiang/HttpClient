@@ -11,23 +11,17 @@
  * See the Mulan PSL v1 for more details.
  *
  */
-package com.github.gzuliyujiang.demo;
 
-import android.app.Application;
-
-import com.github.gzuliyujiang.http.HttpRequest;
-import com.github.gzuliyujiang.http.Utils;
+package com.github.gzuliyujiang.http;
 
 /**
- * Created by liyujiang on 2020/5/20.
+ * HTTP请求回调
+ * Created by liyujiang on 2020/7/14.
  */
-public class DemoApp extends Application {
+public abstract class Callback {
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        HttpRequest.enableLog();
-        Utils.setApplication(this);
-    }
+    public abstract void onSuccess(String result);
+
+    public abstract void onError(int code, Throwable throwable);
 
 }

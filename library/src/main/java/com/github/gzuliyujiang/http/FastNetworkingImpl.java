@@ -20,12 +20,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.androidnetworking.AndroidNetworking;
+import com.androidnetworking.BuildConfig;
 import com.androidnetworking.common.ANRequest;
 import com.androidnetworking.common.Method;
 import com.androidnetworking.common.RequestBuilder;
 import com.androidnetworking.error.ANError;
 import com.androidnetworking.interfaces.StringRequestListener;
-import com.github.gzuliyujiang.logger.Logger;
 
 import java.util.Map;
 
@@ -35,10 +35,9 @@ import java.util.Map;
  * Created by liyujiang on 2020/6/23 13:50
  */
 @SuppressWarnings("unused")
-public class FastNetworkingImpl implements HttpAdapter {
+class FastNetworkingImpl implements HttpAdapter {
 
     public FastNetworkingImpl(Application application) {
-        Logger.print("use `com.amitshekhar.android:android-networking`");
         AndroidNetworking.initialize(application, Utils.buildOkHttpClient(null));
     }
 
@@ -75,9 +74,9 @@ public class FastNetworkingImpl implements HttpAdapter {
                 FormParams formParams = (FormParams) params;
                 builder.setContentType("application/x-www-form-urlencoded");
                 builder.addStringBody(formParams.toBodyString());
-            } else if (params instanceof JSONParams) {
+            } else if (params instanceof JsonParams) {
                 // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
-                JSONParams jsonParams = (JSONParams) params;
+                JsonParams jsonParams = (JsonParams) params;
                 builder.setContentType("application/json");
                 builder.addStringBody(jsonParams.toBodyJson());
             }
@@ -105,7 +104,8 @@ public class FastNetworkingImpl implements HttpAdapter {
 
     private void addHeaderAndQuery(@NonNull RequestBuilder builder, @NonNull Params params) {
         builder.setTag(params.getTag());
-        builder.setUserAgent(USER_AGENT);
+        String ua = Utils.getDefaultUserAgent() + " FastAndroidNetworking/" + BuildConfig.VERSION_NAME;
+        builder.setUserAgent(ua);
         for (Map.Entry<String, String> entry : params.toHeaderMap().entrySet()) {
             builder.addHeaders(entry.getKey(), entry.getValue());
         }

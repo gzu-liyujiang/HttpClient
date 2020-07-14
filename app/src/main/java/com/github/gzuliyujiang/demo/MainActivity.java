@@ -21,8 +21,9 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.github.gzuliyujiang.http.HttpAdapter;
 import com.github.gzuliyujiang.http.HttpRequest;
+import com.github.gzuliyujiang.http.QueryParams;
+import com.github.gzuliyujiang.http.SafetyCallback;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,15 +34,16 @@ public class MainActivity extends AppCompatActivity {
         final ProgressBar progressBar = findViewById(R.id.main_progress);
         final TextView textView = findViewById(R.id.main_text);
         progressBar.setVisibility(View.VISIBLE);
-        HttpRequest.doGet("http://wthrcdn.etouch.cn/weather_mini?city=%E8%B4%B5%E9%98%B3", null, new HttpAdapter.Callback() {
+        String url = "http://wthrcdn.etouch.cn/weather_mini?city=%E8%B4%B5%E9%98%B3";
+        HttpRequest.doGet(url, new QueryParams(), new SafetyCallback(this) {
             @Override
-            public void onSuccess(String result) {
+            public void onSuccessSafety(String result) {
                 progressBar.setVisibility(View.GONE);
                 textView.setText(result);
             }
 
             @Override
-            public void onError(int code, Throwable throwable) {
+            public void onErrorSafety(int code, Throwable throwable) {
                 progressBar.setVisibility(View.GONE);
                 textView.setText(Log.getStackTraceString(throwable));
             }

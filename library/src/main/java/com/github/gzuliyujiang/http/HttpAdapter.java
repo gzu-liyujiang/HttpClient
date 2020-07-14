@@ -14,21 +14,8 @@
 
 package com.github.gzuliyujiang.http;
 
-import android.os.Build;
-import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import org.json.JSONObject;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 设计思想是使用接口对各模块解耦规范化，不强依赖某些明确的三方库，使得三方库可自由搭配组装。
@@ -49,10 +36,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @SuppressWarnings({"unused", "SpellCheckingInspection"})
 public interface HttpAdapter {
-    String CHARSET = "UTF-8";
-    String USER_AGENT = "Mozilla/5.0 (Linux; Android " + Build.VERSION.RELEASE + "; " +
-            Build.MANUFACTURER + " " + Build.MODEL + "; AppleWebKit/537.36 (KHTML, like Gecko) " +
-            "HttpRequest/" + BuildConfig.VERSION_NAME;
 
     void doGet(String url, @Nullable Params params, @Nullable Callback callback);
 
@@ -63,173 +46,5 @@ public interface HttpAdapter {
     void cancel(Object tag);
 
     void cancelAll();
-
-    /**
-     * HTTP请求回调
-     */
-    abstract class Callback {
-
-        public abstract void onSuccess(String result);
-
-        public abstract void onError(int code, Throwable throwable);
-
-    }
-
-    /**
-     * HTTP请求参数
-     */
-    abstract class Params {
-        private Object tag;
-        private ConcurrentHashMap<String, String> header;
-        private ConcurrentHashMap<String, String> body;
-
-        public Params() {
-            this.tag = UUID.randomUUID();
-            header = new ConcurrentHashMap<>();
-            body = new ConcurrentHashMap<>();
-        }
-
-        /**
-         * 通常我们在{@link android.app.Activity}中做网络请求，
-         * 当销毁时要取消请求否则会发生内存泄露，可通过该标记取消该请求。
-         */
-        public void setTag(Object tag) {
-            this.tag = tag;
-        }
-
-        public final Object getTag() {
-            return tag;
-        }
-
-        public void putHeader(String key, String value) {
-            if (value == null) {
-                value = "";
-            }
-            if (!TextUtils.isEmpty(key)) {
-                header.put(key, value);
-            }
-        }
-
-        public void putBody(String key, String value) {
-            if (value == null) {
-                value = "";
-            }
-            if (!TextUtils.isEmpty(key)) {
-                body.put(key, value);
-            }
-        }
-
-        public Map<String, String> toHeaderMap() {
-            for (Map.Entry<String, String> entry : header.entrySet()) {
-                if (entry.getValue() == null) {
-                    header.remove(entry.getKey());
-                }
-            }
-            return header;
-        }
-
-        public Map<String, String> toBodyMap() {
-            for (Map.Entry<String, String> entry : body.entrySet()) {
-                if (entry.getValue() == null) {
-                    body.remove(entry.getKey());
-                }
-            }
-            return body;
-        }
-
-        public void clearHeader() {
-            header.clear();
-        }
-
-        public void clearBody() {
-            body.clear();
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return "{header=" + header + ", body=" + body + "}";
-        }
-
-    }
-
-    class QueryParams extends Params {
-
-        public String toBodyString() {
-            StringBuilder result = new StringBuilder();
-            for (ConcurrentHashMap.Entry<String, String> entry : toBodyMap().entrySet()) {
-                if (result.length() > 0) {
-                    result.append("&");
-                }
-                result.append(entry.getKey());
-                result.append("=");
-                result.append(entry.getValue());
-            }
-            return result.toString();
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return toBodyString();
-        }
-
-    }
-
-    class FormParams extends QueryParams {
-        private String bodyString;
-
-        public FormParams(String body) {
-            this.bodyString = body;
-        }
-
-        @Override
-        public String toBodyString() {
-            if (bodyString != null) {
-                return bodyString;
-            }
-            return super.toBodyString();
-        }
-
-    }
-
-    class JSONParams extends Params {
-        private String json;
-
-        public JSONParams(String json) {
-            this.json = json;
-        }
-
-        public String toBodyJson() {
-            if (json != null) {
-                return json;
-            }
-            return new JSONObject(toBodyMap()).toString();
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return toBodyJson();
-        }
-
-    }
-
-    class MultipartParams extends QueryParams {
-        private List<File> files = new ArrayList<>();
-
-        public MultipartParams(File file) {
-            this(Collections.singletonList(file));
-        }
-
-        public MultipartParams(List<File> files) {
-            this.files.addAll(files);
-        }
-
-        public List<File> toFiles() {
-            return files;
-        }
-
-    }
 
 }

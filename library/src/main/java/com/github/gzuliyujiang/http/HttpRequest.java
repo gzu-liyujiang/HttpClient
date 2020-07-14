@@ -14,8 +14,6 @@
 
 package com.github.gzuliyujiang.http;
 
-import android.app.Application;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -29,11 +27,24 @@ import java.util.List;
  */
 @SuppressWarnings({"unused", "SpellCheckingInspection", "UnusedReturnValue"})
 public class HttpRequest {
+    private static final String MESSAGE = "Please add dependency `runtimeOnly 'com.lzy.net:okgo:3.0.4'`" +
+            " or `runtimeOnly 'com.amitshekhar.android:android-networking:1.0.2'` in your app/build.gradle";
     private static volatile HttpRequest instance;
     private HttpAdapter adapter;
 
     private HttpRequest() {
         super();
+        try {
+            Class.forName(com.lzy.okgo.OkGo.class.getName());
+            adapter = new OkGoImpl(Utils.getApplication());
+        } catch (Throwable e) {
+            // ClassNotFoundException | NoClassDefFoundError
+            try {
+                Class.forName(com.androidnetworking.AndroidNetworking.class.getName());
+                adapter = new FastNetworkingImpl(Utils.getApplication());
+            } catch (Throwable ignore) {
+            }
+        }
     }
 
     private static HttpRequest getInstance() {
@@ -51,37 +62,23 @@ public class HttpRequest {
      * 可选添加依赖：runtimeOnly `com.orhanobut:logger:latest.version`
      */
     public static void enableLog() {
-        Logger.useDefaultPrinter(HttpRequest.class.getSimpleName());
+        Logger.enableDefaultPrinter(HttpRequest.class.getSimpleName());
     }
 
     public static void setAdapter(HttpAdapter adapter) {
         getInstance().adapter = adapter;
     }
 
-    /**
-     * 必须添加依赖：runtimeOnly 'com.lzy.net:okgo:3.0.4'
-     */
-    public static void useOkGo(Application application) {
-        setAdapter(new OkGoImpl(application));
-    }
-
-    /**
-     * 必须添加依赖：runtimeOnly 'com.amitshekhar.android:android-networking:1.0.2'
-     */
-    public static void useFastNetworking(Application application) {
-        setAdapter(new FastNetworkingImpl(application));
-    }
-
-    public static void doGet(String url, @Nullable HttpAdapter.Params params, @Nullable HttpAdapter.Callback callback) {
+    public static void doGet(String url, @Nullable Params params, @Nullable Callback callback) {
         getAdapter().doGet(url, params, callback);
     }
 
-    public static void doPost(String url, @Nullable HttpAdapter.Params params, HttpAdapter.Callback callback) {
+    public static void doPost(String url, @Nullable Params params, Callback callback) {
         getAdapter().doPost(url, params, callback);
     }
 
-    public static void upload(String url, @NonNull List<File> files, @Nullable HttpAdapter.Callback callback) {
-        doPost(url, new HttpAdapter.MultipartParams(files), callback);
+    public static void upload(String url, @NonNull List<File> files, @Nullable Callback callback) {
+        doPost(url, new MultipartParams(files), callback);
     }
 
     public static void cancel(Object tag) {
@@ -93,10 +90,11 @@ public class HttpRequest {
     }
 
     private static HttpAdapter getAdapter() {
-        if (getInstance().adapter == null) {
-            throw new NullPointerException("Please specify http adapter in your application");
+        HttpAdapter adapter = getInstance().adapter;
+        if (adapter == null) {
+            throw new RuntimeException(MESSAGE);
         }
-        return getInstance().adapter;
+        return adapter;
     }
 
 }

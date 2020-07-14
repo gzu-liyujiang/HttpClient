@@ -11,23 +11,30 @@
  * See the Mulan PSL v1 for more details.
  *
  */
-package com.github.gzuliyujiang.demo;
 
-import android.app.Application;
+package com.github.gzuliyujiang.http;
 
-import com.github.gzuliyujiang.http.HttpRequest;
-import com.github.gzuliyujiang.http.Utils;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
- * Created by liyujiang on 2020/5/20.
+ * Created by liyujiang on 2020/7/14.
  */
-public class DemoApp extends Application {
+public class MultipartParams extends QueryParams {
+    private List<File> files = new ArrayList<>();
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        HttpRequest.enableLog();
-        Utils.setApplication(this);
+    public MultipartParams(File file) {
+        this(Collections.singletonList(file));
+    }
+
+    public MultipartParams(List<File> files) {
+        this.files.addAll(files);
+    }
+
+    public List<File> toFiles() {
+        return files;
     }
 
 }

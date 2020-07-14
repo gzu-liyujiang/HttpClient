@@ -11,23 +11,25 @@
  * See the Mulan PSL v1 for more details.
  *
  */
-package com.github.gzuliyujiang.demo;
 
-import android.app.Application;
-
-import com.github.gzuliyujiang.http.HttpRequest;
-import com.github.gzuliyujiang.http.Utils;
+package com.github.gzuliyujiang.http;
 
 /**
- * Created by liyujiang on 2020/5/20.
+ * Created by liyujiang on 2020/7/14.
  */
-public class DemoApp extends Application {
+public class FormParams extends QueryParams {
+    private String bodyString;
+
+    public FormParams(String body) {
+        this.bodyString = body;
+    }
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-        HttpRequest.enableLog();
-        Utils.setApplication(this);
+    public String toBodyString() {
+        if (bodyString != null) {
+            return bodyString;
+        }
+        return super.toBodyString();
     }
 
 }

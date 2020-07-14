@@ -11,23 +11,34 @@
  * See the Mulan PSL v1 for more details.
  *
  */
-package com.github.gzuliyujiang.demo;
 
-import android.app.Application;
+package com.github.gzuliyujiang.http;
 
-import com.github.gzuliyujiang.http.HttpRequest;
-import com.github.gzuliyujiang.http.Utils;
+import androidx.annotation.NonNull;
+
+import org.json.JSONObject;
 
 /**
- * Created by liyujiang on 2020/5/20.
+ * Created by liyujiang on 2020/7/14.
  */
-public class DemoApp extends Application {
+public class JsonParams extends Params {
+    private String json;
 
+    public JsonParams(String json) {
+        this.json = json;
+    }
+
+    public String toBodyJson() {
+        if (json != null) {
+            return json;
+        }
+        return new JSONObject(toBodyMap()).toString();
+    }
+
+    @NonNull
     @Override
-    public void onCreate() {
-        super.onCreate();
-        HttpRequest.enableLog();
-        Utils.setApplication(this);
+    public String toString() {
+        return toBodyJson();
     }
 
 }

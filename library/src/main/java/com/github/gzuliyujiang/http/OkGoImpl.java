@@ -19,6 +19,7 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 
 import com.github.gzuliyujiang.logger.Logger;
+import com.lzy.okgo.BuildConfig;
 import com.lzy.okgo.OkGo;
 import com.lzy.okgo.cache.CacheMode;
 import com.lzy.okgo.callback.StringCallback;
@@ -39,16 +40,18 @@ import java.util.Map;
  * <p>
  * Created by liyujiang on 2018/9/14 13:03
  */
-public class OkGoImpl implements HttpAdapter {
+@SuppressWarnings("unused")
+class OkGoImpl implements HttpAdapter {
 
     public OkGoImpl(Application application) {
         OkLogger.debug(false);
         // See https://github.com/jeasonlzy/okhttp-OkGo/wiki/Init#%E5%85%A8%E5%B1%80%E9%85%8D%E7%BD%AE
+        String ua = Utils.getDefaultUserAgent() + " OkGo/" + BuildConfig.VERSION_NAME;
         OkGo.getInstance().init(application)
                 .setOkHttpClient(Utils.buildOkHttpClient(new CookieJarImpl(new SPCookieStore(application))))
                 .setRetryCount(1)
                 .setCacheMode(CacheMode.DEFAULT)
-                .addCommonHeaders(new HttpHeaders("User-Agent", USER_AGENT));
+                .addCommonHeaders(new HttpHeaders("User-Agent", ua));
     }
 
     @Override
@@ -88,8 +91,8 @@ public class OkGoImpl implements HttpAdapter {
                         bodyRequest.addFileParams("file", files);
                     }
                 }
-            } else if (params instanceof JSONParams) {
-                JSONParams jsonParams = (JSONParams) params;
+            } else if (params instanceof JsonParams) {
+                JsonParams jsonParams = (JsonParams) params;
                 // 注意使用该方法上传数据会清空实体中其他所有的参数，头信息不清除
                 bodyRequest.upJson(jsonParams.toBodyJson());
             }
