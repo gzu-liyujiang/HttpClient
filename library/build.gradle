@@ -3,7 +3,7 @@ apply from: "${rootDir}/gradle/common.gradle"
 apply from: "${rootDir}/gradle/publish.gradle"
 
 dependencies {
-    implementation 'com.github.gzu-liyujiang:Logger:2020.7.3'
+    implementation 'com.github.gzu-liyujiang:Logger:1.1.0'
     compileOnly 'com.lzy.net:okgo:3.0.4'
     compileOnly 'com.amitshekhar.android:android-networking:1.0.2'
 }
