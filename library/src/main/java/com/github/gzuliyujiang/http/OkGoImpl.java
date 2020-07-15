@@ -46,12 +46,13 @@ class OkGoImpl implements HttpAdapter {
     public OkGoImpl(Application application) {
         OkLogger.debug(false);
         // See https://github.com/jeasonlzy/okhttp-OkGo/wiki/Init#%E5%85%A8%E5%B1%80%E9%85%8D%E7%BD%AE
-        String ua = Utils.getDefaultUserAgent() + " OkGo/" + BuildConfig.VERSION_NAME;
-        OkGo.getInstance().init(application)
-                .setOkHttpClient(Utils.buildOkHttpClient(new CookieJarImpl(new SPCookieStore(application))))
-                .setRetryCount(1)
-                .setCacheMode(CacheMode.DEFAULT)
-                .addCommonHeaders(new HttpHeaders("User-Agent", ua));
+        OkGo okGo = OkGo.getInstance();
+        okGo.init(application);
+        okGo.setOkHttpClient(Utils.buildOkHttpClient(new CookieJarImpl(new SPCookieStore(application))));
+        okGo.setRetryCount(1);
+        okGo.setCacheMode(CacheMode.DEFAULT);
+        String ua = Utils.getDefaultUserAgent(application, "OkGo/" + BuildConfig.VERSION_NAME);
+        okGo.addCommonHeaders(new HttpHeaders("User-Agent", ua));
     }
 
     @Override

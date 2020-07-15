@@ -14,16 +14,13 @@
 
 package com.github.gzuliyujiang.http;
 
-import android.annotation.SuppressLint;
-import android.app.Application;
+import android.content.Context;
 import android.os.Build;
 import android.webkit.WebSettings;
 
 import androidx.annotation.Nullable;
 
-import java.lang.reflect.Method;
 import java.security.SecureRandom;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLContext;
@@ -36,32 +33,7 @@ import okhttp3.OkHttpClient;
  * Created by liyujiang on 2020/7/6.
  */
 @SuppressWarnings("unused")
-public class Utils {
-    private static Application application;
-
-    public static void setApplication(Application application) {
-        Utils.application = application;
-    }
-
-    @Nullable
-    @SuppressLint({"PrivateApi", "DiscouragedPrivateApi"})
-    public static Application getApplication() {
-        if (application != null) {
-            return application;
-        }
-        try {
-            // Accessing hidden method Landroid/app/ActivityThread;->getApplication()Landroid/app/Application;
-            // or Landroid/app/AppGlobals;->getInitialApplication()Landroid/app/Application; (greylist, JNI, allowed)
-            Class<?> activityThreadClass = Class.forName("android.app.ActivityThread");
-            Method currentActivityThread = activityThreadClass.getDeclaredMethod("currentActivityThread");
-            Object at = currentActivityThread.invoke(null);
-            Class<?> currentActivityThreadClass = Objects.requireNonNull(at).getClass();
-            Method getApplication = currentActivityThreadClass.getMethod("getApplication");
-            return (Application) getApplication.invoke(at);
-        } catch (Throwable ignore) {
-            return null;
-        }
-    }
+class Utils {
 
     public static OkHttpClient buildOkHttpClient(@Nullable CookieJar cookieJar) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
@@ -86,16 +58,22 @@ public class Utils {
         return builder.build();
     }
 
-    public static String getDefaultUserAgent() {
+    public static String getDefaultUserAgent(Context context, String customPart) {
         String ua;
         try {
-            ua = WebSettings.getDefaultUserAgent(getApplication());
+            ua = WebSettings.getDefaultUserAgent(context);
         } catch (Throwable ignore) {
             ua = "Mozilla/5.0 (Linux; Android " + Build.VERSION.RELEASE + "; " +
                     Build.MODEL + " Build/" + Build.ID + "; wv) " +
                     "AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Safari/537.36";
         }
-        return ua.concat(" HttpRequest/" + BuildConfig.VERSION_NAME);
+        String currentCustomPart = " HttpRequest/" + BuildConfig.VERSION_NAME;
+        if (customPart == null) {
+            customPart = currentCustomPart;
+        } else {
+            customPart = " " + customPart.trim() + currentCustomPart;
+        }
+        return ua + customPart;
     }
 
 }

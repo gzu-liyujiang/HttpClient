@@ -14,6 +14,8 @@
 
 package com.github.gzuliyujiang.http;
 
+import android.app.Application;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -34,17 +36,6 @@ public class HttpRequest {
 
     private HttpRequest() {
         super();
-        try {
-            Class.forName(com.lzy.okgo.OkGo.class.getName());
-            adapter = new OkGoImpl(Utils.getApplication());
-        } catch (Throwable e) {
-            // ClassNotFoundException | NoClassDefFoundError
-            try {
-                Class.forName(com.androidnetworking.AndroidNetworking.class.getName());
-                adapter = new FastNetworkingImpl(Utils.getApplication());
-            } catch (Throwable ignore) {
-            }
-        }
     }
 
     private static HttpRequest getInstance() {
@@ -63,6 +54,24 @@ public class HttpRequest {
      */
     public static void enableLog() {
         Logger.enableDefaultPrinter(HttpRequest.class.getSimpleName());
+    }
+
+    /**
+     * 使用`okhttp-OkGo`须添加依赖：runtimeOnly 'com.lzy.net:okgo:3.0.4'
+     * 使用`Fast-Android-Networking`须添加依赖：runtimeOnly 'com.amitshekhar.android:android-networking:1.0.2'
+     */
+    public static void initInApplication(Application application) {
+        try {
+            Class.forName(com.lzy.okgo.OkGo.class.getName());
+            setAdapter(new OkGoImpl(application));
+        } catch (Throwable e) {
+            // ClassNotFoundException | NoClassDefFoundError
+            try {
+                Class.forName(com.androidnetworking.AndroidNetworking.class.getName());
+                setAdapter(new FastNetworkingImpl(application));
+            } catch (Throwable ignore) {
+            }
+        }
     }
 
     public static void setAdapter(HttpAdapter adapter) {

@@ -6,8 +6,8 @@ dependencies {
     implementation project(":library")
     implementation "androidx.appcompat:appcompat:$androidxCoreVersion"
     runtimeOnly 'com.orhanobut:logger:2.2.0'
-    //runtimeOnly 'com.lzy.net:okgo:3.0.4'
-    runtimeOnly 'com.amitshekhar.android:android-networking:1.0.2'
+    runtimeOnly 'com.lzy.net:okgo:3.0.4'
+    //runtimeOnly 'com.amitshekhar.android:android-networking:1.0.2'
 }
 
 android {

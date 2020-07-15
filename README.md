@@ -18,6 +18,9 @@ dependencies {
 }
 ```
 ```java
+        HttpRequest.enableLog();
+        HttpRequest.initInApplication(this);
+
         progressBar.setVisibility(View.VISIBLE);
         String url = "http://wthrcdn.etouch.cn/weather_mini?city=%E8%B4%B5%E9%98%B3";
         HttpRequest.doGet(url, new QueryParams(), new SafetyCallback(this) {
@@ -37,7 +40,7 @@ dependencies {
 ```text
 GET http://wthrcdn.etouch.cn/weather_mini?city=%E8%B4%B5%E9%98%B3 http/1.1
 Accept-Language: zh-CN,zh;q=0.8
-User-Agent: Mozilla/5.0 (Linux; Android 7.1.2; G011C Build/N2G48H; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/66.0.3359.158 Safari/537.36 HttpRequest/2020.7.14 OkGo/3.0.4 
+User-Agent: Mozilla/5.0 (Linux; Android 7.1.2; G011C Build/N2G48H; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/66.0.3359.158 Safari/537.36 OkGo/3.0.4 HttpRequest/2.1.0 
 
 200 OK http://wthrcdn.etouch.cn/weather_mini?city=%E8%B4%B5%E9%98%B3 (56ms）
 Date: Tue, 14 Jul 2020 03:03:35 GMT

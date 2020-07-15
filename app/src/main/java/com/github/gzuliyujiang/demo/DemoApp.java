@@ -16,7 +16,6 @@ package com.github.gzuliyujiang.demo;
 import android.app.Application;
 
 import com.github.gzuliyujiang.http.HttpRequest;
-import com.github.gzuliyujiang.http.Utils;
 
 /**
  * Created by liyujiang on 2020/5/20.
@@ -27,7 +26,7 @@ public class DemoApp extends Application {
     public void onCreate() {
         super.onCreate();
         HttpRequest.enableLog();
-        Utils.setApplication(this);
+        HttpRequest.initInApplication(this);
     }
 
 }

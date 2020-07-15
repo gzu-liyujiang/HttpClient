@@ -27,6 +27,7 @@ import com.github.gzuliyujiang.logger.Logger;
  * 绑定{@link FragmentActivity}及{@link Fragment}生命周期，防止界面销毁后异常
  * Created by liyujiang on 2020/7/14.
  */
+@SuppressWarnings("unused")
 public abstract class SafetyCallback extends Callback implements LifecycleEventObserver {
     private Lifecycle.Event lifecycleEvent;
 

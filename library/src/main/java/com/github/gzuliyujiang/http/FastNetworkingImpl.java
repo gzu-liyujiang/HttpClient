@@ -36,9 +36,11 @@ import java.util.Map;
  */
 @SuppressWarnings("unused")
 class FastNetworkingImpl implements HttpAdapter {
+    private Application application;
 
     public FastNetworkingImpl(Application application) {
         AndroidNetworking.initialize(application, Utils.buildOkHttpClient(null));
+        this.application = application;
     }
 
     @Override
@@ -104,7 +106,7 @@ class FastNetworkingImpl implements HttpAdapter {
 
     private void addHeaderAndQuery(@NonNull RequestBuilder builder, @NonNull Params params) {
         builder.setTag(params.getTag());
-        String ua = Utils.getDefaultUserAgent() + " FastAndroidNetworking/" + BuildConfig.VERSION_NAME;
+        String ua = Utils.getDefaultUserAgent(application, "FastNetworking/" + BuildConfig.VERSION_NAME);
         builder.setUserAgent(ua);
         for (Map.Entry<String, String> entry : params.toHeaderMap().entrySet()) {
             builder.addHeaders(entry.getKey(), entry.getValue());
